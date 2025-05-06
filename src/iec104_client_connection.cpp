@@ -144,7 +144,7 @@ IEC104ClientConnection::sendInterrogationCommand(int ca)
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send interrogation command (CA=%i)", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState), ca);
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState), ca); //LCOV_EXCL_LINE
     }
 
     return success;
@@ -178,7 +178,7 @@ IEC104ClientConnection::sendSingleCommand(int ca, int ioa, bool value, bool with
         if (cmdObj) {
             if (CS104_Connection_sendProcessCommandEx(m_connection, CS101_COT_ACTIVATION, ca, cmdObj)) {
                 Iec104Utility::log_debug("%s single command sent (CA=%i, IOA=%i, value=%s, select=%s, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value?"true":"false", select?"true":"false", withTime?"true":"false",
+                                        beforeLog.c_str(), ca, ioa, value?"true":"false", select?"true":"false", withTime?"true":"false", //LCOV_EXCL_LINE
                                         msTimestamp);
                 success = true;
             }
@@ -188,11 +188,11 @@ IEC104ClientConnection::sendSingleCommand(int ca, int ioa, bool value, bool with
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send single command", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState));
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState)); //LCOV_EXCL_LINE
     }
 
     if (!success) Iec104Utility::log_warn("%s Failed to send single command (CA=%i, IOA=%i, value=%s, select=%s, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value?"true":"false", select?"true":"false", withTime?"true":"false",
+                                        beforeLog.c_str(), ca, ioa, value?"true":"false", select?"true":"false", withTime?"true":"false", //LCOV_EXCL_LINE
                                         msTimestamp);
 
     return success;
@@ -226,7 +226,7 @@ IEC104ClientConnection::sendDoubleCommand(int ca, int ioa, int value, bool withT
         if (cmdObj) {
             if (CS104_Connection_sendProcessCommandEx(m_connection, CS101_COT_ACTIVATION, ca, cmdObj)) {
                 Iec104Utility::log_debug("%s double command sent (CA=%i, IOA=%i, value=%d, select=%s, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
                 success = true;
             }
 
@@ -235,11 +235,11 @@ IEC104ClientConnection::sendDoubleCommand(int ca, int ioa, int value, bool withT
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send double command", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState));
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState)); //LCOV_EXCL_LINE
     }
 
     if (!success) Iec104Utility::log_warn("%s Failed to send double command (CA=%i, IOA=%i, value=%d, select=%s, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
 
     return success;
 }
@@ -272,7 +272,7 @@ IEC104ClientConnection::sendStepCommand(int ca, int ioa, int value, bool withTim
         if (cmdObj) {
             if (CS104_Connection_sendProcessCommandEx(m_connection, CS101_COT_ACTIVATION, ca, cmdObj)) {
                 Iec104Utility::log_debug("%s step command sent (CA=%i, IOA=%i, value=%d, select=%s, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
                 success = true;
             }
 
@@ -281,11 +281,11 @@ IEC104ClientConnection::sendStepCommand(int ca, int ioa, int value, bool withTim
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send step command", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState));
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState)); //LCOV_EXCL_LINE
     }
 
     if (!success) Iec104Utility::log_warn("%s Failed to send step command (CA=%i, IOA=%i, value=%d, select=%s, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, select?"true":"false", withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
 
     return success;
 }
@@ -318,7 +318,7 @@ IEC104ClientConnection::sendSetpointNormalized(int ca, int ioa, float value, boo
         if (cmdObj) {
             if (CS104_Connection_sendProcessCommandEx(m_connection, CS101_COT_ACTIVATION, ca, cmdObj)) {
                 Iec104Utility::log_debug("%s setpoint(normalized) sent (CA=%i, IOA=%i, value=%f, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
                 success = true;
             }
 
@@ -327,11 +327,11 @@ IEC104ClientConnection::sendSetpointNormalized(int ca, int ioa, float value, boo
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send step command", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState));
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState)); //LCOV_EXCL_LINE
     }
 
     if (!success) Iec104Utility::log_warn("%s Failed to send setpoint(normalized) (CA=%i, IOA=%i, value=%f, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
 
     return success;
 }
@@ -364,7 +364,7 @@ IEC104ClientConnection::sendSetpointScaled(int ca, int ioa, int value, bool with
         if (cmdObj) {
             if (CS104_Connection_sendProcessCommandEx(m_connection, CS101_COT_ACTIVATION, ca, cmdObj)) {
                 Iec104Utility::log_debug("%s setpoint(scaled) sent (CA=%i, IOA=%i, value=%d, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
                 success = true;
             }
 
@@ -373,11 +373,11 @@ IEC104ClientConnection::sendSetpointScaled(int ca, int ioa, int value, bool with
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send step command", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState));
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState)); //LCOV_EXCL_LINE
     }
 
     if (!success) Iec104Utility::log_warn("%s Failed to send setpoint(scaled) (CA=%i, IOA=%i, value=%d, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
 
     return success;
 }
@@ -410,7 +410,7 @@ IEC104ClientConnection::sendSetpointShort(int ca, int ioa, float value, bool wit
         if (cmdObj) {
             if (CS104_Connection_sendProcessCommandEx(m_connection, CS101_COT_ACTIVATION, ca, cmdObj)) {
                 Iec104Utility::log_debug("%s setpoint(short) sent (CA=%i, IOA=%i, value=%f, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
                 success = true;
             }
 
@@ -419,11 +419,11 @@ IEC104ClientConnection::sendSetpointShort(int ca, int ioa, float value, bool wit
     }
     else {
         Iec104Utility::log_warn("%s Connection unavailable (%s) or not in connected state (%i), cannot send step command", //LCOV_EXCL_LINE
-                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState));
+                                beforeLog.c_str(), (m_connection == nullptr)?"true":"false", static_cast<int>(m_connectionState)); //LCOV_EXCL_LINE
     }
 
     if (!success) Iec104Utility::log_warn("%s Failed to send setpoint(short) (CA=%i, IOA=%i, value=%f, withTime=%s, msTimestamp=%ld)", //LCOV_EXCL_LINE
-                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp);
+                                        beforeLog.c_str(), ca, ioa, value, withTime?"true":"false", msTimestamp); //LCOV_EXCL_LINE
 
     return success;
 }
@@ -597,7 +597,7 @@ IEC104ClientConnection::executePeriodicTasks()
                             if (giTime != 0) {
                                 if (currentTime > m_interrogationRequestSent + (giTime * 1000)) {
                                     Iec104Utility::log_error("%s Interrogation request timed out (no ACT_CON in %ds)", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                            giTime);
+                                                            giTime); //LCOV_EXCL_LINE
 
                                     m_interrogationRequestState = 0;
                                     m_nextGIStartTime = currentTime + (m_config->GiCycle() * 1000);
@@ -615,7 +615,7 @@ IEC104ClientConnection::executePeriodicTasks()
                             if (giTime != 0) {
                                 if (currentTime > m_interrogationRequestSent + (giTime * 1000)) {
                                     Iec104Utility::log_error("%s Interrogation request timed out (no ACT_TERM in %ds)", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                            giTime);
+                                                            giTime); //LCOV_EXCL_LINE
 
                                     m_nextGIStartTime = m_config->GiCycle();
                                     m_interrogationRequestState = 0;
@@ -644,7 +644,7 @@ IEC104ClientConnection::executePeriodicTasks()
                                 }
                                 else {
                                     Iec104Utility::log_error("%s Failed to send interrogation command to CA=%i!", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                            *m_listOfCA_it);
+                                                            *m_listOfCA_it); //LCOV_EXCL_LINE
 
                                     m_client->updateGiStatus(IEC104Client::GiStatus::FAILED);
 
@@ -709,7 +709,7 @@ IEC104ClientConnection::m_asduReceivedHandler(void* parameter, int address,
         }
         else {
             Iec104Utility::log_warn("%s Unexpected interrogation response (state=%d, COT=%d)", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                    self->m_interrogationRequestState, cot);
+                                    self->m_interrogationRequestState, cot); //LCOV_EXCL_LINE
         }
     }
 
@@ -828,7 +828,7 @@ IEC104ClientConnection::m_asduReceivedHandler(void* parameter, int address,
                         }
                         else {
                             Iec104Utility::log_warn("%s Unexpected GI message (giStatus: %d)", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                    self->m_interrogationRequestState, cot);
+                                                    self->m_interrogationRequestState, cot); //LCOV_EXCL_LINE
                         }
                     }
                 }
@@ -840,7 +840,7 @@ IEC104ClientConnection::m_asduReceivedHandler(void* parameter, int address,
 
             default:
                 Iec104Utility::log_debug("%s Type of message (%s (%i), COT: %i) not supported", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                        IEC104ClientConfig::getStringFromTypeID(typeId).c_str(), typeId, cot);
+                                        IEC104ClientConfig::getStringFromTypeID(typeId).c_str(), typeId, cot); //LCOV_EXCL_LINE
                 return false;
         }
     }
@@ -931,7 +931,7 @@ IEC104ClientConnection::prepareConnection()
                     if (access(remoteCertFile.c_str(), R_OK) == 0) {
                         if (TLSConfiguration_addAllowedCertificateFromFile(tlsConfig, remoteCertFile.c_str()) == false) {
                             Iec104Utility::log_warn("%s Failed to load remote certificate file: %s -> ignore certificate", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                    remoteCertFile.c_str());
+                                                    remoteCertFile.c_str()); //LCOV_EXCL_LINE
                         }
                         else {
                             Iec104Utility::log_info("%s Loaded remote certificate file: %s", beforeLog.c_str(), remoteCertFile.c_str()); //LCOV_EXCL_LINE
@@ -939,7 +939,7 @@ IEC104ClientConnection::prepareConnection()
                     }
                     else {
                         Iec104Utility::log_warn("%s Failed to access remote certificate file: %s -> ignore certificate", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                remoteCertFile.c_str());
+                                                remoteCertFile.c_str()); //LCOV_EXCL_LINE
                     }
                 }
             }
@@ -965,7 +965,7 @@ IEC104ClientConnection::prepareConnection()
                     if (access(caCertFile.c_str(), R_OK) == 0) {
                         if (TLSConfiguration_addCACertificateFromFile(tlsConfig, caCertFile.c_str()) == false) {
                             Iec104Utility::log_warn("%s Failed to load CA certificate file: %s -> ignore certificate", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                    caCertFile.c_str());
+                                                    caCertFile.c_str()); //LCOV_EXCL_LINE
                         }
                         else {
                             Iec104Utility::log_info("%s Allowed CA certificate file: %s", beforeLog.c_str(), caCertFile.c_str()); //LCOV_EXCL_LINE
@@ -973,7 +973,7 @@ IEC104ClientConnection::prepareConnection()
                     }
                     else {
                         Iec104Utility::log_warn("%s Failed to access CA certificate file: %s -> ignore certificate", beforeLog.c_str(), //LCOV_EXCL_LINE
-                                                caCertFile.c_str());
+                                                caCertFile.c_str()); //LCOV_EXCL_LINE
                     }
                 }
             }
