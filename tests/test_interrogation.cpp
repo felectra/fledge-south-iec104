@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <algorithm>
 
 #include "cs104_slave.h"
 #include <lib60870/hal_time.h>

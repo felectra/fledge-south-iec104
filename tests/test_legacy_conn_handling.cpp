@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 #include "cs104_slave.h"
 #include <lib60870/hal_thread.h>
