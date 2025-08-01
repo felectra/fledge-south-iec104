@@ -730,7 +730,7 @@ bool IEC104Client::isAsduTriggerGi(vector<Datapoint*>& datapoints,
                     // For double TS, 0 is represented by the binary number 01 = 1 and 1 is represented by the binary number 10 = 2
                     if ((datapoint_value == 1 && trigger_value == 0) || (datapoint_value == 2 && trigger_value == 1)){
                         if (m_activeConnection.get() == nullptr) {
-                            Iec104Utility::log_info("%s No active connexion, skip GI request.", beforeLog.c_str());
+                            Iec104Utility::log_info("%s No active connexion, skip GI request.", beforeLog.c_str()); //LCOV_EXCL_LINE
                             return false;
                         }
                         if(!m_activeConnection->getGiRequested()){
