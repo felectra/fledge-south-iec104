@@ -1471,6 +1471,22 @@ static string gi_triggering_ts_exchange_data = QUOTE({
                 ]
             },
             {
+                "label": "MAROL_0_S.AUX_PRT.INF_TS",
+                "pivot_id": "S_2367_0_2_28",
+                "pivot_type": "DpsTyp",
+                "pivot_subtypes": [
+                "transient",
+                {"trigger_south_gi" : 0}
+                ],
+                "protocols": [
+                {
+                    "address": "37873-21097",
+                    "name": "iec104",
+                    "typeid": "M_DP_NA_1"
+                }
+                ]
+            },
+            {
                 "label": "MAROL_3_3CBO_EXP.PART_TS",
                 "pivot_id": "S_2367_3_45_27",
                 "pivot_type": "SpsTyp",
@@ -1480,6 +1496,21 @@ static string gi_triggering_ts_exchange_data = QUOTE({
                 "protocols": [
                 {
                     "address": "37873-3519059",
+                    "name": "iec104",
+                    "typeid": "M_SP_TB_1"
+                }
+                ]
+            },
+            {
+                "label": "MAROL_0_TS-SYST_PRT.INFA_TS-SYST",
+                "pivot_id": "T_2367_0_59_37",
+                "pivot_type": "SpsTyp",
+                "pivot_subtypes": [
+                    {"trigger_south_gi" : 1}
+                ],
+                "protocols": [
+                {
+                    "address": "37873-487424",
                     "name": "iec104",
                     "typeid": "M_SP_TB_1"
                 }
@@ -2029,8 +2060,10 @@ TEST_F(ConfigTest, ConfigTest24) {
 
     ASSERT_TRUE(config.isConfigComplete());
     ASSERT_EQ(config.valueTsAddressCgTriggering(37873, 20706), -1);
-    ASSERT_NE(config.valueTsAddressCgTriggering(37873, 21096), -1);
-    ASSERT_NE(config.valueTsAddressCgTriggering(37873, 3519059), -1);
+    ASSERT_EQ(config.valueTsAddressCgTriggering(37873, 21096), 1);
+    ASSERT_EQ(config.valueTsAddressCgTriggering(37873, 21097), 0);
+    ASSERT_EQ(config.valueTsAddressCgTriggering(37873, 3519059), 0);
+    ASSERT_EQ(config.valueTsAddressCgTriggering(37873, 487424), 1);
 }
 
 // Test for error case in pivot subtype GI triggering TS
