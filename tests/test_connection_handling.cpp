@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include <config_category.h>
 #include <plugin_api.h>
