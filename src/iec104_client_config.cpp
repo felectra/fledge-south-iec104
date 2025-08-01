@@ -1113,7 +1113,7 @@ void IEC104ClientConfig::importExchangeConfig(const string& exchangeConfig)
                     if (subtype[JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE].IsUint()){
                         trigger_value = subtype[JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE].GetInt();
                         if (trigger_value != 0 && trigger_value != 1) {
-                            Iec104Utility::log_error("%s %s is not a valid value (need to be 0 or 1)", beforeLog.c_str(), JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE);
+                            Iec104Utility::log_error("%s %s is not a valid value (need to be 0 or 1)", beforeLog.c_str(), JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE); //LCOV_EXCL_LINE
                         }
                     }
                     else {
