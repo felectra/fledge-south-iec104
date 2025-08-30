@@ -28,9 +28,10 @@ jobs:
         sudo pip3 install numpy
         sudo ln -s /usr/bin/sqlite3 /usr/local/bin/sqlite3
 
-    - name: Clone and Build Fledge from source
+    - name: Clone and Build Fledge from source (Stable Version)
       run: |
-        git clone https://github.com/fledge-iot/fledge.git
+        # === СТРАТЕГІЧНЕ ПОКРАЩЕННЯ: Фіксуємо стабільну версію Fledge ===
+        git clone --branch v3.1.0 --depth 1 https://github.com/fledge-iot/fledge.git
         cd fledge
         mkdir cmake_build
         cd cmake_build
@@ -40,9 +41,8 @@ jobs:
 
     - name: Link Fledge headers to standard location
       run: |
-        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ ===
         # 'make install' кладе заголовки в /usr/local/include/fledge,
-        # а плагін шукає їх в /usr/include/fledge. Створюємо символічне посилання.
+        # а плагін шукає їх в /usr/include/fledge. Створюємо посилання.
         sudo ln -s /usr/local/include/fledge /usr/include/fledge
 
     - name: Build the plugin
