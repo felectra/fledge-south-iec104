@@ -86,28 +86,46 @@ jobs:
         # Збираємо все разом з parallel compilation
         make -j$(nproc)
         
-        # Спробуємо різні стратегії створення пакетів
-        echo "=== Trying DEB package generation ==="
-        if ! cpack -G DEB; then
-          echo "=== DEB generation failed, trying TGZ ==="
-          cpack -G TGZ
-          echo "=== Creating manual DEB from built plugin ==="
-          # Manual .deb creation for plugin if needed
-          cd ../plugins/south/fledge-south-iec104
-          mkdir -p deb-package/usr/local/fledge/plugins/south/fledge-south-iec104
-          cp libiec104.so deb-package/usr/local/fledge/plugins/south/fledge-south-iec104/
-          cd deb-package
-          mkdir -p DEBIAN
-          cat > DEBIAN/control << EOL
-        Package: fledge-south-iec104
-        Version: 1.0.0
-        Section: base  
-        Priority: optional
-        Architecture: amd64
-        Description: Fledge IEC104 South Plugin
-        EOL
-          dpkg-deb --build . ../../../../../../cmake_build/fledge-south-iec104_1.0.0_amd64.deb
+        # ARCHITECTURE DECISION: Skip CPack, create manual .deb package
+        echo "=== Creating Manual DEB Package (Architectural Solution) ==="
+        
+        # Find the built plugin library
+        PLUGIN_LIB=$(find . -name "libiec104.so" -type f | head -n 1)
+        if [ -z "$PLUGIN_LIB" ]; then
+          echo "::error:: libiec104.so not found after build!"
+          find . -name "*.so" -type f
+          exit 1
         fi
+        
+        echo "Found plugin library at: $PLUGIN_LIB"
+        
+        # Create proper .deb package structure
+        mkdir -p deb-package/usr/local/fledge/plugins/south/fledge-south-iec104
+        cp "$PLUGIN_LIB" deb-package/usr/local/fledge/plugins/south/fledge-south-iec104/
+        
+        # Create DEBIAN control file with proper metadata
+        mkdir -p deb-package/DEBIAN
+        cat > deb-package/DEBIAN/control << 'EOF'
+Package: fledge-south-iec104
+Version: 1.0.0-$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+Section: base
+Priority: optional
+Architecture: amd64
+Depends: fledge (>= 2.1.0), libssl3, lib60870
+Maintainer: FledgePower Team <noreply@fledgepower.com>
+Description: Fledge South IEC 60870-5-104 Plugin
+ This plugin provides IEC 60870-5-104 protocol support for Fledge.
+ It allows Fledge to collect data from IEC 104 devices and systems.
+Homepage: https://github.com/felectra/fledge-south-iec104
+EOF
+        
+        # Build the .deb package
+        cd deb-package
+        dpkg-deb --build . ../fledge-south-iec104_1.0.0_amd64.deb
+        cd ..
+        
+        echo "✅ Manual .deb package created successfully!"
+        ls -la *.deb
 
     # --- ФАЗА 4: ПОШУК ТА ПУБЛІКАЦІЯ АРТЕФАКТУ ---
     - name: Find and Prepare Package for Publish
