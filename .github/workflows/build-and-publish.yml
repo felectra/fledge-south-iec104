@@ -85,8 +85,29 @@ jobs:
         cmake .. -DFLEDGE_SRC=$(pwd)/.. -DCMAKE_BUILD_TYPE=Release
         # Збираємо все разом з parallel compilation
         make -j$(nproc)
-        # Створюємо .deb пакети для всіх компонентів
-        cpack
+        
+        # Спробуємо різні стратегії створення пакетів
+        echo "=== Trying DEB package generation ==="
+        if ! cpack -G DEB; then
+          echo "=== DEB generation failed, trying TGZ ==="
+          cpack -G TGZ
+          echo "=== Creating manual DEB from built plugin ==="
+          # Manual .deb creation for plugin if needed
+          cd ../plugins/south/fledge-south-iec104
+          mkdir -p deb-package/usr/local/fledge/plugins/south/fledge-south-iec104
+          cp libiec104.so deb-package/usr/local/fledge/plugins/south/fledge-south-iec104/
+          cd deb-package
+          mkdir -p DEBIAN
+          cat > DEBIAN/control << EOL
+        Package: fledge-south-iec104
+        Version: 1.0.0
+        Section: base  
+        Priority: optional
+        Architecture: amd64
+        Description: Fledge IEC104 South Plugin
+        EOL
+          dpkg-deb --build . ../../../../../../cmake_build/fledge-south-iec104_1.0.0_amd64.deb
+        fi
 
     # --- ФАЗА 4: ПОШУК ТА ПУБЛІКАЦІЯ АРТЕФАКТУ ---
     - name: Find and Prepare Package for Publish
