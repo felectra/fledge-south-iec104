@@ -4,7 +4,7 @@ name: Build and Publish .deb Package
 on:
   push:
     branches:
-      # Для тестування використовуйте свою гілку, напр. 'feature/setup-ci-cd'
+      # Для тестування використовуйте свою гілку
       - feature/setup-ci-cd
 
 jobs:
@@ -19,44 +19,50 @@ jobs:
     - name: Checkout plugin repository
       uses: actions/checkout@v4
       with:
-        path: fledge-south-iec104
+        repository: felectra/fledge-south-iec104 # Явно вказуємо репозиторій плагіна
+        path: fledge-south-iec104-source # Клонуємо в тимчасову директорію
 
-    - name: Install build dependencies
+    - name: Install all dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev sqlite3
         sudo pip3 install numpy
         sudo ln -s /usr/bin/sqlite3 /usr/local/bin/sqlite3
 
-    - name: Clone and Build Fledge from source (Stable Version v3.1.0)
+    - name: Clone Fledge (Stable Version)
       run: |
+        # Клонуємо стабільну версію Fledge
         git clone --branch v3.1.0 --depth 1 https://github.com/fledge-iot/fledge.git
+
+    - name: Integrate Plugin into Fledge Source
+      run: |
+        # Переміщуємо вихідний код плагіна всередину Fledge
+        mv fledge-south-iec104-source fledge/plugins/south/fledge-south-iec104
+        # "Реєструємо" наш плагін у системі збірки Fledge, додаючи його в CMakeLists.txt
+        echo 'add_subdirectory(fledge-south-iec104)' >> fledge/plugins/south/CMakeLists.txt
+
+    - name: Build Fledge and Plugin Together
+      run: |
         cd fledge
         mkdir cmake_build
         cd cmake_build
+        # Запускаємо cmake для всього проєкту (Fledge + плагін)
         cmake ..
-        make
-        sudo make install
-
-    - name: Build the plugin
-      run: |
-        cd fledge-south-iec104
-        mkdir build
-        cd build
-        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Прямо вказуємо CMake, де шукати Fledge ===
-        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
+        # Збираємо все разом
         make
 
     - name: Create .deb package
       run: |
-        cd fledge-south-iec104/build
+        # Після успішної збірки, пакет плагіна буде знаходитись у відповідній директорії
+        cd fledge/cmake_build/plugins/south/fledge-south-iec104
         cpack
 
     - name: Publish to GitHub Packages
       run: |
-        DEB_FILE=$(find ./fledge-south-iec104/build -name "*.deb" | head -n 1)
+        DEB_FILE=$(find ./fledge/cmake_build/plugins/south/fledge-south-iec104 -name "*.deb" | head -n 1)
         if [ -z "$DEB_FILE" ]; then
           echo "::error::.deb file not found!"
           exit 1
         fi
         echo "Package created successfully at $DEB_FILE"
+        echo "Publishing logic can be added here."
