@@ -106,26 +106,44 @@ jobs:
         # АРХІТЕКТУРНЕ РІШЕННЯ: Standalone plugin build як у документації
         echo "=== BUILDING IEC104 PLUGIN STANDALONE ==="
         
-        # ДІАГНОСТИКА: Перевіряємо структуру Fledge installation
-        echo "=== FLEDGE INSTALLATION STRUCTURE DEBUG ==="
-        find /usr/local/fledge -type f -name "*.h" | head -10 || echo "Headers not in /usr/local/fledge"
-        find /usr/include/fledge -type f -name "*.h" | head -10 || echo "Headers not in /usr/include/fledge"
-        find /usr/local/include/fledge -type f -name "*.h" | head -10 || echo "Headers not in /usr/local/include/fledge"
+        # ДІАГНОСТИКА: Перевіряємо структуру Fledge source та installation
+        echo "=== FLEDGE SOURCE STRUCTURE DEBUG ==="
+        echo "Checking ../../fledge structure:"
+        ls -la ../../fledge/ | head -10
+        echo "Checking ../../fledge/C structure:"
+        ls -la ../../fledge/C/ | head -10 || echo "No C directory in source"
+        echo "Looking for common directory:"
+        find ../../fledge -name "common" -type d | head -5
+        echo "Looking for .h files in source:"
+        find ../../fledge -name "*.h" -type f | head -10
         
         # КРИТИЧНО: Використовуємо правильні CMAKE змінні замість env vars
         echo "=== CMAKE CONFIGURATION WITH EXPLICIT PATHS ==="
         mkdir -p build && cd build
         
-        # Спробуємо різні стратегії конфігурації
-        if [ -d "/usr/local/include/fledge" ]; then
-          echo "Using /usr/local/include/fledge for headers"
+        # ВИПРАВЛЕННЯ: Створити правильну структуру для FindFledge.cmake
+        echo "=== CREATING PROPER HEADER STRUCTURE ==="
+        
+        # Manual header installation з source tree
+        sudo mkdir -p /usr/local/include/fledge
+        
+        # Копіювати headers з різних директорій Fledge source
+        echo "Copying headers from Fledge source..."
+        find ../../fledge -name "*.h" -path "*/common/*" -exec sudo cp {} /usr/local/include/fledge/ \;
+        find ../../fledge -name "*.h" -path "*/services/*" -exec sudo cp {} /usr/local/include/fledge/ \;  
+        find ../../fledge -name "*.h" -path "*/plugins/*" -exec sudo cp {} /usr/local/include/fledge/ \;
+        
+        # Перевірити результат
+        echo "Headers installed:"
+        ls -la /usr/local/include/fledge/ | head -10
+        
+        # Спробуємо конфігурацію з встановленими headers
+        if [ -f "/usr/local/include/fledge/plugin_api.h" ]; then
+          echo "Using manually installed headers"
           cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_INCLUDE=/usr/local/include/fledge -DFLEDGE_LIB=/usr/local/fledge/lib -DFLEDGE_INSTALL=/usr/local/fledge ..
-        elif [ -d "/usr/include/fledge" ]; then
-          echo "Using /usr/include/fledge for headers"
-          cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_INCLUDE=/usr/include/fledge -DFLEDGE_LIB=/usr/lib/fledge -DFLEDGE_INSTALL=/usr/local/fledge ..
         else
-          echo "Using FLEDGE_SRC approach with source tree"
-          cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_SRC=../../fledge -DFLEDGE_INSTALL=/usr/local/fledge ..
+          echo "Fallback: Using FLEDGE_SRC with absolute path"
+          cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_SRC=$(pwd)/../../fledge -DFLEDGE_INSTALL=/usr/local/fledge ..
         fi
         
         # Збудувати плагін
