@@ -78,8 +78,14 @@ jobs:
         
         # Перевірити встановлення
         echo "=== FLEDGE INSTALLATION VERIFICATION ==="
-        ls -la /usr/local/fledge/include/ || echo "Headers not found"
-        ls -la /usr/local/fledge/lib/ || echo "Libraries not found"
+        echo "Checking /usr/local/fledge/:"
+        ls -la /usr/local/fledge/ || echo "Fledge directory not found"
+        echo "Checking /usr/local/include/fledge/:"
+        ls -la /usr/local/include/fledge/ || echo "Headers not in /usr/local/include/fledge"
+        echo "Checking /usr/include/fledge/:"
+        ls -la /usr/include/fledge/ || echo "Headers not in /usr/include/fledge"
+        echo "Searching for plugin_api.h:"
+        find /usr -name "plugin_api.h" 2>/dev/null || echo "plugin_api.h not found anywhere"
 
     # --- ФАЗА 3: STANDALONE PLUGIN BUILD ---
     - name: Prepare Plugin for Standalone Build
@@ -100,16 +106,27 @@ jobs:
         # АРХІТЕКТУРНЕ РІШЕННЯ: Standalone plugin build як у документації
         echo "=== BUILDING IEC104 PLUGIN STANDALONE ==="
         
-        # Встановити змінні оточення для plugin build
-        export LIB_104="/usr/local"
-        export FLEDGE_ROOT="/usr/local/fledge"
+        # ДІАГНОСТИКА: Перевіряємо структуру Fledge installation
+        echo "=== FLEDGE INSTALLATION STRUCTURE DEBUG ==="
+        find /usr/local/fledge -type f -name "*.h" | head -10 || echo "Headers not in /usr/local/fledge"
+        find /usr/include/fledge -type f -name "*.h" | head -10 || echo "Headers not in /usr/include/fledge"
+        find /usr/local/include/fledge -type f -name "*.h" | head -10 || echo "Headers not in /usr/local/include/fledge"
         
-        # Створити build directory
+        # КРИТИЧНО: Використовуємо правильні CMAKE змінні замість env vars
+        echo "=== CMAKE CONFIGURATION WITH EXPLICIT PATHS ==="
         mkdir -p build && cd build
         
-        # КЛЮЧОВЕ: Використовуємо FLEDGE_INSTALL для правильних шляхів
-        echo "=== CMAKE CONFIGURATION ==="
-        cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_INSTALL=/usr/local/fledge ..
+        # Спробуємо різні стратегії конфігурації
+        if [ -d "/usr/local/include/fledge" ]; then
+          echo "Using /usr/local/include/fledge for headers"
+          cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_INCLUDE=/usr/local/include/fledge -DFLEDGE_LIB=/usr/local/fledge/lib -DFLEDGE_INSTALL=/usr/local/fledge ..
+        elif [ -d "/usr/include/fledge" ]; then
+          echo "Using /usr/include/fledge for headers"
+          cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_INCLUDE=/usr/include/fledge -DFLEDGE_LIB=/usr/lib/fledge -DFLEDGE_INSTALL=/usr/local/fledge ..
+        else
+          echo "Using FLEDGE_SRC approach with source tree"
+          cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_SRC=../../fledge -DFLEDGE_INSTALL=/usr/local/fledge ..
+        fi
         
         # Збудувати плагін
         echo "=== BUILDING PLUGIN ==="
