@@ -30,9 +30,9 @@ jobs:
       run: |
         sudo apt-get update
         # Встановлюємо вичерпний список залежностей, виявлених під час попередніх запусків
-        sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev sqlite3
-        # Встановлюємо залежність Python з фіксованою версією
-        sudo pip3 install numpy==1.24.3
+        sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev sqlite3 python3-numpy
+        # Backup: pip install якщо системний пакет недостатній
+        sudo pip3 install --break-system-packages numpy>=1.26.0 || echo "Using system numpy package"
         # Створюємо символічне посилання для sqlite3, оскільки Fledge шукає його в нестандартному місці
         sudo ln -s /usr/bin/sqlite3 /usr/local/bin/sqlite3
 
