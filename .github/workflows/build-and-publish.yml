@@ -19,14 +19,13 @@ jobs:
     - name: Checkout plugin repository
       uses: actions/checkout@v4
       with:
-        path: fledge-south-iec104 # Клонуємо плагін в окрему директорію
+        path: fledge-south-iec104
 
     - name: Install build dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev sqlite3
         sudo pip3 install numpy
-        # Створюємо символічне посилання для sqlite3, оскільки Fledge шукає його в нестандартному місці
         sudo ln -s /usr/bin/sqlite3 /usr/local/bin/sqlite3
 
     - name: Clone and Build Fledge from source
@@ -43,7 +42,7 @@ jobs:
       run: |
         # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ ===
         # 'make install' кладе заголовки в /usr/local/include/fledge,
-        # а плагін шукає їх в /usr/include/fledge. Створюємо посилання.
+        # а плагін шукає їх в /usr/include/fledge. Створюємо символічне посилання.
         sudo ln -s /usr/local/include/fledge /usr/include/fledge
 
     - name: Build the plugin
