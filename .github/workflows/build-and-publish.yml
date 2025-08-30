@@ -28,9 +28,8 @@ jobs:
         sudo pip3 install numpy
         sudo ln -s /usr/bin/sqlite3 /usr/local/bin/sqlite3
 
-    - name: Clone and Build Fledge from source (Stable Version)
+    - name: Clone and Build Fledge from source (Stable Version v3.1.0)
       run: |
-        # === СТРАТЕГІЧНЕ ПОКРАЩЕННЯ: Фіксуємо стабільну версію Fledge ===
         git clone --branch v3.1.0 --depth 1 https://github.com/fledge-iot/fledge.git
         cd fledge
         mkdir cmake_build
@@ -39,18 +38,13 @@ jobs:
         make
         sudo make install
 
-    - name: Link Fledge headers to standard location
-      run: |
-        # 'make install' кладе заголовки в /usr/local/include/fledge,
-        # а плагін шукає їх в /usr/include/fledge. Створюємо посилання.
-        sudo ln -s /usr/local/include/fledge /usr/include/fledge
-
     - name: Build the plugin
       run: |
         cd fledge-south-iec104
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
+        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Прямо вказуємо CMake, де шукати Fledge ===
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
         make
 
     - name: Create .deb package
@@ -65,5 +59,4 @@ jobs:
           echo "::error::.deb file not found!"
           exit 1
         fi
-        echo "Publishing $DEB_FILE..."
         echo "Package created successfully at $DEB_FILE"
