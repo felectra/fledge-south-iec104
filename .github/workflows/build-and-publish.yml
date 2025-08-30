@@ -64,111 +64,87 @@ jobs:
         # Клонуємо стабільну, зафіксовану версію Fledge для передбачуваності збірки
         git clone --branch v3.1.0 --depth 1 https://github.com/fledge-iot/fledge.git
 
-    - name: Integrate Plugin into Fledge Source
+    - name: Build and Install Fledge (for plugin headers/libs)
+      working-directory: ./fledge
       run: |
-        # Гарантуємо, що директорія для плагінів існує
-        mkdir -p fledge/plugins/south/
+        # АРХІТЕКТУРНЕ РІШЕННЯ: Спочатку збудувати Fledge для headers/libs
+        echo "=== BUILDING FLEDGE FOR PLUGIN DEPENDENCIES ==="
+        mkdir cmake_build && cd cmake_build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j$(nproc)
         
-        # КРИТИЧНО: Виключити зайві директорії перед переміщенням
+        # Встановити Fledge headers та libraries для plugin build
+        sudo make install
+        
+        # Перевірити встановлення
+        echo "=== FLEDGE INSTALLATION VERIFICATION ==="
+        ls -la /usr/local/fledge/include/ || echo "Headers not found"
+        ls -la /usr/local/fledge/lib/ || echo "Libraries not found"
+
+    # --- ФАЗА 3: STANDALONE PLUGIN BUILD ---
+    - name: Prepare Plugin for Standalone Build
+      run: |
+        # КРИТИЧНО: Виключити зайві директорії перед збіркою
         echo "=== CLEANING PLUGIN SOURCE ==="
         rm -rf fledge-south-iec104-source/.bmad-core
         rm -rf fledge-south-iec104-source/.claude  
         rm -rf fledge-south-iec104-source/.gemini
         rm -rf fledge-south-iec104-source/.git
         
-        # Переміщуємо вихідний код плагіна всередину структури Fledge
-        mv fledge-south-iec104-source fledge/plugins/south/fledge-south-iec104
-        
-        # ДІАГНОСТИКА: Перевіряємо очищену структуру плагіна
         echo "=== CLEANED PLUGIN STRUCTURE ==="
-        ls -la fledge/plugins/south/fledge-south-iec104/
-        
-        # Перевіряємо існуючий south CMakeLists.txt
-        echo "=== SOUTH PLUGINS STRUCTURE ==="
-        ls -la fledge/plugins/south/ || echo "South directory missing"
-        
-        # Створюємо CMakeLists.txt якщо не існує
-        if [ ! -f "fledge/plugins/south/CMakeLists.txt" ]; then
-          echo "Creating south plugins CMakeLists.txt"
-          echo "cmake_minimum_required(VERSION 2.8)" > fledge/plugins/south/CMakeLists.txt
-          echo "" >> fledge/plugins/south/CMakeLists.txt
-          echo "# South plugins" >> fledge/plugins/south/CMakeLists.txt
-          echo "add_subdirectory(fledge-south-iec104)" >> fledge/plugins/south/CMakeLists.txt
-        else
-          echo "=== EXISTING SOUTH CMAKELISTS ==="
-          cat fledge/plugins/south/CMakeLists.txt
-          # Додаємо наш плагін
-          echo 'add_subdirectory(fledge-south-iec104)' >> fledge/plugins/south/CMakeLists.txt
-        fi
-        
-        echo "=== FINAL SOUTH CMAKELISTS ==="
-        cat fledge/plugins/south/CMakeLists.txt
+        ls -la fledge-south-iec104-source/
 
-    # --- ФАЗА 3: УНІФІКОВАНА ЗБІРКА ТА ПАКУВАННЯ ---
-    - name: Prepare Build Directory
-      run: mkdir -p fledge/cmake_build
-
-    - name: Configure, Build, and Create Packages
-      # Виконуємо всі команди збірки з однієї робочої директорії для надійності
-      working-directory: ./fledge/cmake_build
+    - name: Build Plugin (Standalone)
+      working-directory: ./fledge-south-iec104-source
       run: |
-        # КРИТИЧНЕ ВИПРАВЛЕННЯ: Використовуємо FLEDGE_SRC для правильних шляхів
-        echo "=== CMAKE CONFIGURATION DEBUG ==="
-        cmake .. -DFLEDGE_SRC=$(pwd)/.. -DCMAKE_BUILD_TYPE=Release
+        # АРХІТЕКТУРНЕ РІШЕННЯ: Standalone plugin build як у документації
+        echo "=== BUILDING IEC104 PLUGIN STANDALONE ==="
         
-        # ДІАГНОСТИКА: Перевіряємо CMake output для нашого плагіна
-        echo "=== BUILD TARGETS DEBUG ==="
-        make help | grep -i iec104 || echo "No iec104 targets found"
+        # Встановити змінні оточення для plugin build
+        export LIB_104="/usr/local"
+        export FLEDGE_ROOT="/usr/local/fledge"
         
-        # Збираємо все разом з parallel compilation
-        echo "=== BUILDING PROJECT ==="
+        # Створити build directory
+        mkdir -p build && cd build
+        
+        # КЛЮЧОВЕ: Використовуємо FLEDGE_INSTALL для правильних шляхів
+        echo "=== CMAKE CONFIGURATION ==="
+        cmake -DCMAKE_BUILD_TYPE=Release -DFLEDGE_INSTALL=/usr/local/fledge ..
+        
+        # Збудувати плагін
+        echo "=== BUILDING PLUGIN ==="
         make -j$(nproc)
         
-        # FORCED BUILD: Спробуємо збудувати плагін явно
-        echo "=== FORCING PLUGIN BUILD ==="
-        make iec104 || echo "iec104 target not found, trying alternatives..."
+        # Встановити плагін
+        echo "=== INSTALLING PLUGIN ==="
+        sudo make install
         
-        # ДІАГНОСТИКА: Шукаємо всі .so файли після збірки  
-        echo "=== SEARCHING FOR BUILT LIBRARIES ==="
+        # Верифікувати збірку
+        echo "=== PLUGIN BUILD VERIFICATION ==="
         find . -name "*.so" -type f -ls
+    # --- ФАЗА 4: .DEB PACKAGE СТВОРЕННЯ ---
+    - name: Create .deb Package
+      working-directory: ./fledge-south-iec104-source/build
+      run: |
+        # ARCHITECTURE DECISION: Create .deb from standalone build
+        echo "=== Creating Manual DEB Package (Standalone Build) ==="
         
-        # ДІАГНОСТИКА: Перевіряємо plugins/south після збірки
-        echo "=== CHECKING PLUGIN BUILD DIRECTORY ==="
-        ls -la ../plugins/south/fledge-south-iec104/ || echo "Plugin directory missing"
-        find ../plugins/south/fledge-south-iec104/ -name "*.so" -type f || echo "No .so in plugin dir"
-        
-        # ARCHITECTURE DECISION: Skip CPack, create manual .deb package
-        echo "=== Creating Manual DEB Package (Architectural Solution) ==="
-        
-        # Find the built plugin library - розширений пошук
+        # Find the built plugin library
         echo "=== SEARCHING FOR PLUGIN LIBRARY ==="
         PLUGIN_LIB=$(find . -name "libiec104.so" -type f | head -n 1)
         
         if [ -z "$PLUGIN_LIB" ]; then
-          echo "::warning:: libiec104.so not found, searching for alternatives..."
-          # Шукаємо різні можливі назви
-          PLUGIN_LIB=$(find . -name "*iec104*.so" -type f | head -n 1)
-          
-          if [ -z "$PLUGIN_LIB" ]; then
-            echo "::warning:: No iec104 library found, searching in plugin directory..."
-            PLUGIN_LIB=$(find ../plugins/south/fledge-south-iec104 -name "*.so" -type f | head -n 1)
-            
-            if [ -z "$PLUGIN_LIB" ]; then
-              echo "::error:: No plugin library found anywhere!"
-              echo "=== ALL .so FILES IN BUILD TREE ==="
-              find . -name "*.so" -type f -ls
-              echo "=== PLUGIN DIRECTORY CONTENTS ==="
-              ls -la ../plugins/south/fledge-south-iec104/ || echo "Plugin directory missing"
-              exit 1
-            fi
-          fi
+          echo "::error:: libiec104.so not found after standalone build!"
+          echo "=== ALL .so FILES IN BUILD TREE ==="
+          find . -name "*.so" -type f -ls
+          exit 1
         fi
         
-        echo "Found plugin library at: $PLUGIN_LIB"
+        echo "✅ Found plugin library at: $PLUGIN_LIB"
         
         # Create proper .deb package structure
-        mkdir -p deb-package/usr/local/fledge/plugins/south/fledge-south-iec104
-        cp "$PLUGIN_LIB" deb-package/usr/local/fledge/plugins/south/fledge-south-iec104/
+        mkdir -p deb-package/usr/local/fledge/plugins/south/iec104
+        cp "$PLUGIN_LIB" deb-package/usr/local/fledge/plugins/south/iec104/
         
         # Create DEBIAN control file with proper metadata
         mkdir -p deb-package/DEBIAN
@@ -194,22 +170,19 @@ jobs:
         echo "✅ Manual .deb package created successfully!"
         ls -la *.deb
 
-    # --- ФАЗА 4: ПОШУК ТА ПУБЛІКАЦІЯ АРТЕФАКТУ ---
+    # --- ФАЗА 5: ПОШУК ТА ПУБЛІКАЦІЯ АРТЕФАКТУ ---
     - name: Find and Prepare Package for Publish
       run: |
-        echo "=== DEBUGGING: Directory structure ==="
-        find ./fledge/cmake_build -type f -name "*.deb" -ls
-        
-        # Шукаємо .deb пакет саме нашого плагіна в директорії збірки
-        DEB_FILE=$(find ./fledge/cmake_build -name "*iec104*.deb" | head -n 1)
+        echo "=== SEARCHING FOR .DEB PACKAGE ==="
+        DEB_FILE=$(find ./fledge-south-iec104-source/build -name "fledge-south-iec104_*.deb" | head -n 1)
         
         # Надійна перевірка, що файл знайдено
         if [ -z "$DEB_FILE" ]; then
           echo "::error:: .deb file for IEC104 plugin was not found!"
           echo "=== DEBUGGING: All .deb packages found ==="
-          find ./fledge/cmake_build -name "*.deb" -exec ls -la {} \;
-          echo "=== DEBUGGING: cmake_build contents ==="
-          ls -la ./fledge/cmake_build/
+          find ./fledge-south-iec104-source/build -name "*.deb" -exec ls -la {} \;
+          echo "=== DEBUGGING: build directory contents ==="
+          ls -la ./fledge-south-iec104-source/build/
           exit 1
         fi
         
