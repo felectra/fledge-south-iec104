@@ -60,14 +60,3 @@ jobs:
           -H "Content-Type: application/octet-stream" \
           -T "$DEB_FILE" \
           "https://apt.pkg.github.com/felectra/$(basename $DEB_FILE)"
-```
-
-**Крок 3: Завантажте зміни**
-
-Тепер вам потрібно додати до коміту як оновлений `.yml` файл, так і новий файл ключа.
-
-```bash
-git add .
-git commit -m "feat: Add local GPG key and update workflow to use it"
-git push
-
