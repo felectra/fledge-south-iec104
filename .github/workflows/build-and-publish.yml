@@ -27,12 +27,18 @@ jobs:
     # Крок 2: Встановлення залежностей для збірки
     # ВАЖЛИВО: Цей блок потрібно адаптувати для кожного плагіна.
     # Перевірте документацію або CMakeLists.txt плагіна, щоб визначити необхідні пакети.
+
     - name: Install build dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake libssl-dev
+        # Крок 2.1: Додаємо офіційний репозиторій Fledge
+        sudo curl -s -L https://raw.githubusercontent.com/fledge-iot/fledge/develop/scripts/plugins/linux/install-fledge-apt-repo.sh -o /tmp/install-fledge-apt-repo.sh
+        sudo chmod +x /tmp/install-fledge-apt-repo.sh
+        sudo /tmp/install-fledge-apt-repo.sh
 
-    # Крок 3: Компіляція плагіна
+        # Крок 2.2: Оновлюємо список пакетів та встановлюємо Fledge SDK та інші залежності
+        sudo apt-get update
+        sudo apt-get install -y fledge-dev build-essential cmake libssl-dev
+
     - name: Build the plugin
       run: |
         mkdir build
@@ -40,14 +46,12 @@ jobs:
         cmake -DCMAKE_BUILD_TYPE=Release ..
         make
 
-    # Крок 4: Створення .deb пакета
     - name: Create .deb package
       run: |
         cd build
         # Команда 'cpack' використовує інструкції з CMakeLists.txt для створення пакета
         cpack
 
-    # Крок 5: Публікація пакета в GitHub Packages
     - name: Publish to GitHub Packages
       run: |
         # Знаходимо наш .deb файл. Припускаємо, що він один.
@@ -57,7 +61,7 @@ jobs:
           exit 1
         fi
         echo "Publishing $DEB_FILE..."
-        
+
         # Використовуємо curl для завантаження файлу в APT репозиторій організації
         # URL має бути у форматі: https://apt.pkg.github.com/{OWNER}/{REPO_NAME}
         # Але для APT репозиторіїв GitHub очікує просто ім'я файлу в кінці.
