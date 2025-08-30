@@ -30,12 +30,10 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        # Крок 2.1: Додаємо офіційний репозиторій Fledge
-        sudo curl -s -L https://raw.githubusercontent.com/fledge-iot/fledge/develop/scripts/plugins/linux/install-fledge-apt-repo.sh -o /tmp/install-fledge-apt-repo.sh
-        sudo chmod +x /tmp/install-fledge-apt-repo.sh
-        sudo /tmp/install-fledge-apt-repo.sh
+        # Крок 2.1: Додаємо офіційний репозиторій Fledge (надійний спосіб з документації)
+        curl -sL https://github.com/fledge-iot/fledge/raw/develop/scripts/plugins/linux/add-pkg-repo.sh | sudo bash
 
-        # Крок 2.2: Оновлюємо список пакетів та встановлюємо Fledge SDK та інші залежності
+        # Крок 2.2: Оновлюємо список пакетів та встановлюємо Fledge SDK
         sudo apt-get update
         sudo apt-get install -y fledge-dev build-essential cmake libssl-dev
 
