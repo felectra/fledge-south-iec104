@@ -40,4 +40,4 @@ tests/build/
 cmake-build-debug/*
 
 # Github
-.github*
+#.github*
