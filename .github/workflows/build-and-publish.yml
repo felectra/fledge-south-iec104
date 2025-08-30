@@ -24,14 +24,14 @@ jobs:
     - name: Install build dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev
+        # === НОВЕ ВИПРАВЛЕННЯ: Додаємо утиліту командного рядка SQLite3 ===
+        sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev sqlite3
         sudo pip3 install numpy
 
     - name: Clone and Build Fledge from source
       run: |
         git clone https://github.com/fledge-iot/fledge.git
         cd fledge
-        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Використовуємо назву 'cmake_build' ===
         mkdir cmake_build
         cd cmake_build
         cmake ..
