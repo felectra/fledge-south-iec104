@@ -70,8 +70,22 @@ jobs:
         mkdir -p fledge/plugins/south/
         # Переміщуємо вихідний код плагіна всередину структури Fledge
         mv fledge-south-iec104-source fledge/plugins/south/fledge-south-iec104
+        
+        # ДІАГНОСТИКА: Перевіряємо структуру плагіна
+        echo "=== PLUGIN STRUCTURE DEBUG ==="
+        ls -la fledge/plugins/south/fledge-south-iec104/
+        echo "=== CHECKING FOR CMakeLists.txt ==="
+        ls -la fledge/plugins/south/fledge-south-iec104/CMakeLists.txt || echo "CMakeLists.txt MISSING!"
+        
+        # Перевіряємо існуючий CMakeLists.txt
+        echo "=== EXISTING SOUTH CMAKELISTS ==="
+        cat fledge/plugins/south/CMakeLists.txt || echo "No existing CMakeLists.txt"
+        
         # "Реєструємо" наш плагін у системі збірки Fledge
         echo 'add_subdirectory(fledge-south-iec104)' >> fledge/plugins/south/CMakeLists.txt
+        
+        echo "=== UPDATED SOUTH CMAKELISTS ==="
+        cat fledge/plugins/south/CMakeLists.txt
 
     # --- ФАЗА 3: УНІФІКОВАНА ЗБІРКА ТА ПАКУВАННЯ ---
     - name: Prepare Build Directory
@@ -82,19 +96,46 @@ jobs:
       working-directory: ./fledge/cmake_build
       run: |
         # КРИТИЧНЕ ВИПРАВЛЕННЯ: Використовуємо FLEDGE_SRC для правильних шляхів
+        echo "=== CMAKE CONFIGURATION DEBUG ==="
         cmake .. -DFLEDGE_SRC=$(pwd)/.. -DCMAKE_BUILD_TYPE=Release
+        
+        # ДІАГНОСТИКА: Перевіряємо CMake output для нашого плагіна
+        echo "=== BUILD TARGETS DEBUG ==="
+        make help | grep -i iec104 || echo "No iec104 targets found"
+        
         # Збираємо все разом з parallel compilation
+        echo "=== BUILDING PROJECT ==="
         make -j$(nproc)
+        
+        # ДІАГНОСТИКА: Шукаємо всі .so файли після збірки
+        echo "=== SEARCHING FOR BUILT LIBRARIES ==="
+        find . -name "*.so" -type f -ls
         
         # ARCHITECTURE DECISION: Skip CPack, create manual .deb package
         echo "=== Creating Manual DEB Package (Architectural Solution) ==="
         
-        # Find the built plugin library
+        # Find the built plugin library - розширений пошук
+        echo "=== SEARCHING FOR PLUGIN LIBRARY ==="
         PLUGIN_LIB=$(find . -name "libiec104.so" -type f | head -n 1)
+        
         if [ -z "$PLUGIN_LIB" ]; then
-          echo "::error:: libiec104.so not found after build!"
-          find . -name "*.so" -type f
-          exit 1
+          echo "::warning:: libiec104.so not found, searching for alternatives..."
+          # Шукаємо різні можливі назви
+          PLUGIN_LIB=$(find . -name "*iec104*.so" -type f | head -n 1)
+          
+          if [ -z "$PLUGIN_LIB" ]; then
+            echo "::warning:: No iec104 library found, searching in plugin directory..."
+            PLUGIN_LIB=$(find ../plugins/south/fledge-south-iec104 -name "*.so" -type f | head -n 1)
+            
+            if [ -z "$PLUGIN_LIB" ]; then
+              echo "::error:: No plugin library found anywhere!"
+              echo "=== ALL .so FILES IN BUILD TREE ==="
+              find . -name "*.so" -type f -ls
+              echo "=== PLUGIN DIRECTORY CONTENTS ==="
+              ls -la ../plugins/south/fledge-south-iec104/ || echo "Plugin directory missing"
+              exit 1
+            fi
+          fi
         fi
         
         echo "Found plugin library at: $PLUGIN_LIB"
