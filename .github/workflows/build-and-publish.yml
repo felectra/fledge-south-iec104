@@ -19,8 +19,8 @@ jobs:
     - name: Checkout plugin repository
       uses: actions/checkout@v4
       with:
-        repository: felectra/fledge-south-iec104 # Явно вказуємо репозиторій плагіна
-        path: fledge-south-iec104-source # Клонуємо в тимчасову директорію
+        repository: felectra/fledge-south-iec104
+        path: fledge-south-iec104-source
 
     - name: Install all dependencies
       run: |
@@ -31,39 +31,31 @@ jobs:
 
     - name: Clone Fledge (Stable Version)
       run: |
-        # Клонуємо стабільну версію Fledge
         git clone --branch v3.1.0 --depth 1 https://github.com/fledge-iot/fledge.git
 
     - name: Integrate Plugin into Fledge Source
       run: |
-        # === НАДІЙНЕ ВИПРАВЛЕННЯ: Гарантуємо існування директорії призначення ===
         mkdir -p fledge/plugins/south/
-        # Переміщуємо вихідний код плагіна всередину Fledge
         mv fledge-south-iec104-source fledge/plugins/south/fledge-south-iec104
-        # "Реєструємо" наш плагін у системі збірки Fledge, додаючи його в CMakeLists.txt
         echo 'add_subdirectory(fledge-south-iec104)' >> fledge/plugins/south/CMakeLists.txt
 
-    - name: Build Fledge and Plugin Together
+    - name: Build and Create Packages
       run: |
-        cd fledge
-        mkdir cmake_build
-        cd cmake_build
+        cd fledge/cmake_build
         # Запускаємо cmake для всього проєкту (Fledge + плагін)
         cmake ..
         # Збираємо все разом
         make
-
-    - name: Create .deb package
-      run: |
-        # Після успішної збірки, пакет плагіна буде знаходитись у відповідній директорії
-        cd fledge/cmake_build/plugins/south/fledge-south-iec104
+        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Запускаємо cpack з головної директорії збірки ===
         cpack
 
     - name: Publish to GitHub Packages
       run: |
-        DEB_FILE=$(find ./fledge/cmake_build/plugins/south/fledge-south-iec104 -name "*.deb" | head -n 1)
+        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Шукаємо .deb пакет у головній директорії збірки ===
+        DEB_FILE=$(find ./fledge/cmake_build -name "fledge-south-iec104*.deb" | head -n 1)
         if [ -z "$DEB_FILE" ]; then
-          echo "::error::.deb file not found!"
+          echo "::error:: .deb file for plugin not found! Listing all found packages:"
+          find ./fledge/cmake_build -name "*.deb"
           exit 1
         fi
         echo "Package created successfully at $DEB_FILE"
