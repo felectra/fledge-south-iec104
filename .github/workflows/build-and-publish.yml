@@ -25,8 +25,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ca-certificates curl gnupg
 
-        # Крок 2.2: Завантажуємо та встановлюємо GPG ключ з основного репозиторію Dianomic
-        curl -sL http://packages.dianomic.com/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/dianomic-archive-keyring.gpg
+        # Крок 2.2: Копіюємо наш локальний GPG ключ
+        sudo gpg --dearmor < .github/keys/KEY.gpg > /usr/share/keyrings/dianomic-archive-keyring.gpg
 
         # Крок 2.3: Додаємо основний СТАБІЛЬНИЙ репозиторій Fledge
         echo "deb [signed-by=/usr/share/keyrings/dianomic-archive-keyring.gpg] http://packages.dianomic.com/ubuntu2404/fledge/ stable main" | sudo tee /etc/apt/sources.list.d/dianomic.list > /dev/null
@@ -50,7 +50,7 @@ jobs:
     - name: Publish to GitHub Packages
       run: |
         DEB_FILE=$(find . -name "*.deb" | head -n 1)
-        if [ -z "$DE," ]; then
+        if [ -z "$DEB_FILE" ]; then
           echo "::error::.deb file not found!"
           exit 1
         fi
@@ -60,4 +60,14 @@ jobs:
           -H "Content-Type: application/octet-stream" \
           -T "$DEB_FILE" \
           "https://apt.pkg.github.com/felectra/$(basename $DEB_FILE)"
+```
+
+**Крок 3: Завантажте зміни**
+
+Тепер вам потрібно додати до коміту як оновлений `.yml` файл, так і новий файл ключа.
+
+```bash
+git add .
+git commit -m "feat: Add local GPG key and update workflow to use it"
+git push
 
