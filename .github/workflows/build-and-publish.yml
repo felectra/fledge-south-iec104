@@ -68,23 +68,40 @@ jobs:
       run: |
         # Гарантуємо, що директорія для плагінів існує
         mkdir -p fledge/plugins/south/
+        
+        # КРИТИЧНО: Виключити зайві директорії перед переміщенням
+        echo "=== CLEANING PLUGIN SOURCE ==="
+        rm -rf fledge-south-iec104-source/.bmad-core
+        rm -rf fledge-south-iec104-source/.claude  
+        rm -rf fledge-south-iec104-source/.gemini
+        rm -rf fledge-south-iec104-source/.git
+        
         # Переміщуємо вихідний код плагіна всередину структури Fledge
         mv fledge-south-iec104-source fledge/plugins/south/fledge-south-iec104
         
-        # ДІАГНОСТИКА: Перевіряємо структуру плагіна
-        echo "=== PLUGIN STRUCTURE DEBUG ==="
+        # ДІАГНОСТИКА: Перевіряємо очищену структуру плагіна
+        echo "=== CLEANED PLUGIN STRUCTURE ==="
         ls -la fledge/plugins/south/fledge-south-iec104/
-        echo "=== CHECKING FOR CMakeLists.txt ==="
-        ls -la fledge/plugins/south/fledge-south-iec104/CMakeLists.txt || echo "CMakeLists.txt MISSING!"
         
-        # Перевіряємо існуючий CMakeLists.txt
-        echo "=== EXISTING SOUTH CMAKELISTS ==="
-        cat fledge/plugins/south/CMakeLists.txt || echo "No existing CMakeLists.txt"
+        # Перевіряємо існуючий south CMakeLists.txt
+        echo "=== SOUTH PLUGINS STRUCTURE ==="
+        ls -la fledge/plugins/south/ || echo "South directory missing"
         
-        # "Реєструємо" наш плагін у системі збірки Fledge
-        echo 'add_subdirectory(fledge-south-iec104)' >> fledge/plugins/south/CMakeLists.txt
+        # Створюємо CMakeLists.txt якщо не існує
+        if [ ! -f "fledge/plugins/south/CMakeLists.txt" ]; then
+          echo "Creating south plugins CMakeLists.txt"
+          echo "cmake_minimum_required(VERSION 2.8)" > fledge/plugins/south/CMakeLists.txt
+          echo "" >> fledge/plugins/south/CMakeLists.txt
+          echo "# South plugins" >> fledge/plugins/south/CMakeLists.txt
+          echo "add_subdirectory(fledge-south-iec104)" >> fledge/plugins/south/CMakeLists.txt
+        else
+          echo "=== EXISTING SOUTH CMAKELISTS ==="
+          cat fledge/plugins/south/CMakeLists.txt
+          # Додаємо наш плагін
+          echo 'add_subdirectory(fledge-south-iec104)' >> fledge/plugins/south/CMakeLists.txt
+        fi
         
-        echo "=== UPDATED SOUTH CMAKELISTS ==="
+        echo "=== FINAL SOUTH CMAKELISTS ==="
         cat fledge/plugins/south/CMakeLists.txt
 
     # --- ФАЗА 3: УНІФІКОВАНА ЗБІРКА ТА ПАКУВАННЯ ---
@@ -107,9 +124,18 @@ jobs:
         echo "=== BUILDING PROJECT ==="
         make -j$(nproc)
         
-        # ДІАГНОСТИКА: Шукаємо всі .so файли після збірки
+        # FORCED BUILD: Спробуємо збудувати плагін явно
+        echo "=== FORCING PLUGIN BUILD ==="
+        make iec104 || echo "iec104 target not found, trying alternatives..."
+        
+        # ДІАГНОСТИКА: Шукаємо всі .so файли після збірки  
         echo "=== SEARCHING FOR BUILT LIBRARIES ==="
         find . -name "*.so" -type f -ls
+        
+        # ДІАГНОСТИКА: Перевіряємо plugins/south після збірки
+        echo "=== CHECKING PLUGIN BUILD DIRECTORY ==="
+        ls -la ../plugins/south/fledge-south-iec104/ || echo "Plugin directory missing"
+        find ../plugins/south/fledge-south-iec104/ -name "*.so" -type f || echo "No .so in plugin dir"
         
         # ARCHITECTURE DECISION: Skip CPack, create manual .deb package
         echo "=== Creating Manual DEB Package (Architectural Solution) ==="
