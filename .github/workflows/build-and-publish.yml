@@ -1,39 +1,39 @@
 # Назва автоматизованого процесу
 name: Build and Publish .deb Package
 
-# Умова запуску: при будь-якому пуші в гілку 'main'.
-# Пам'ятайте: для тестування спочатку змініть це на вашу робочу гілку (напр., 'feature/setup-ci-cd'),
-# а потім, після успішної перевірки, поверніть на 'main' перед злиттям
 on:
   push:
     branches:
+      # Для тестування використовуйте свою гілку, напр. 'feature/setup-ci-cd'
+      # Для робочого процесу тут має бути 'main'
       - feature/setup-ci-cd
 
 jobs:
   build:
-    # Використовуємо віртуальну машину з Ubuntu останньої версії
-    runs-on: ubuntu-latest
+    # 1. Використовуємо Ubuntu 24.04, як зазначено в PRD
+    runs-on: ubuntu-24.04
 
-    # Надаємо дозволи для нашого процесу
     permissions:
-      contents: read      # Дозвіл на читання коду з репозиторію
-      packages: write    # Ключовий дозвіл: на запис у GitHub Packages
+      contents: read
+      packages: write
 
     steps:
-    # Крок 1: Клонування репозиторію
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Крок 2: Встановлення залежностей для збірки
-    # ВАЖЛИВО: Цей блок потрібно адаптувати для кожного плагіна.
-    # Перевірте документацію або CMakeLists.txt плагіна, щоб визначити необхідні пакети.
-
     - name: Install build dependencies
       run: |
-        # Крок 2.1: Додаємо офіційний репозиторій Fledge (надійний спосіб з документації)
-        curl -sL https://github.com/fledge-iot/fledge/raw/develop/scripts/plugins/linux/add-pkg-repo.sh | sudo bash
+        # Крок 2.1: Встановлюємо базові утиліти
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl gnupg
 
-        # Крок 2.2: Оновлюємо список пакетів та встановлюємо Fledge SDK
+        # Крок 2.2: Завантажуємо та встановлюємо офіційний GPG ключ Fledge
+        curl -sL https://archives.fledge-iot.org/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/fledge-archive-keyring.gpg
+
+        # Крок 2.3: Додаємо СТАБІЛЬНИЙ репозиторій Fledge v3.1.0 для Ubuntu 24.04
+        echo "deb [signed-by=/usr/share/keyrings/fledge-archive-keyring.gpg] http://archives.fledge-iot.org/3.1.0/ubuntu2404/ main" | sudo tee /etc/apt/sources.list.d/fledge.list > /dev/null
+
+        # Крок 2.4: Оновлюємо список пакетів та встановлюємо Fledge SDK та інші залежності
         sudo apt-get update
         sudo apt-get install -y fledge-dev build-essential cmake libssl-dev
 
@@ -47,22 +47,16 @@ jobs:
     - name: Create .deb package
       run: |
         cd build
-        # Команда 'cpack' використовує інструкції з CMakeLists.txt для створення пакета
         cpack
 
     - name: Publish to GitHub Packages
       run: |
-        # Знаходимо наш .deb файл. Припускаємо, що він один.
         DEB_FILE=$(find . -name "*.deb" | head -n 1)
         if [ -z "$DEB_FILE" ]; then
           echo "::error::.deb file not found!"
           exit 1
         fi
         echo "Publishing $DEB_FILE..."
-
-        # Використовуємо curl для завантаження файлу в APT репозиторій організації
-        # URL має бути у форматі: https://apt.pkg.github.com/{OWNER}/{REPO_NAME}
-        # Але для APT репозиторіїв GitHub очікує просто ім'я файлу в кінці.
         curl --fail -X PUT \
           -u "${{ secrets.GITHUB_ACTOR }}:${{ secrets.GITHUB_TOKEN }}" \
           -H "Content-Type: application/octet-stream" \
