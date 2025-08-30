@@ -37,7 +37,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ..
+        cmake -DCMAKE_BUILD_TYPE=Release ..
         make
 
     # Крок 4: Створення .deb пакета
