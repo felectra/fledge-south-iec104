@@ -36,6 +36,8 @@ jobs:
 
     - name: Integrate Plugin into Fledge Source
       run: |
+        # === НАДІЙНЕ ВИПРАВЛЕННЯ: Гарантуємо існування директорії призначення ===
+        mkdir -p fledge/plugins/south/
         # Переміщуємо вихідний код плагіна всередину Fledge
         mv fledge-south-iec104-source fledge/plugins/south/fledge-south-iec104
         # "Реєструємо" наш плагін у системі збірки Fledge, додаючи його в CMakeLists.txt
@@ -66,3 +68,4 @@ jobs:
         fi
         echo "Package created successfully at $DEB_FILE"
         echo "Publishing logic can be added here."
+
