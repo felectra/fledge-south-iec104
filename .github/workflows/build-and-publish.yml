@@ -25,8 +25,8 @@ jobs:
       run: |
         # Встановлюємо базові утиліти для компіляції
         sudo apt-get update
-        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Додаємо бібліотеку для UUID ===
-        sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev
+        # === НОВЕ ВИПРАВЛЕННЯ: Додаємо бібліотеку для cURL (HTTPS-запити) ===
+        sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev
         # Встановлюємо NumPy
         sudo pip3 install numpy
 
@@ -70,6 +70,5 @@ jobs:
         fi
         echo "Publishing $DEB_FILE..."
         # Примітка: Логіка публікації може потребувати коригування для GitHub Packages APT registry.
-        # Це базовий приклад завантаження артефакту.
         # Поки що ми просто перевіряємо, що пакет створюється.
         echo "Package created successfully at $DEB_FILE"
