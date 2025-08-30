@@ -105,23 +105,23 @@ jobs:
         
         # Create DEBIAN control file with proper metadata
         mkdir -p deb-package/DEBIAN
-        cat > deb-package/DEBIAN/control << 'EOF'
-Package: fledge-south-iec104
-Version: 1.0.0-$(date +%Y%m%d)-$(git rev-parse --short HEAD)
-Section: base
-Priority: optional
-Architecture: amd64
-Depends: fledge (>= 2.1.0), libssl3, lib60870
-Maintainer: FledgePower Team <noreply@fledgepower.com>
-Description: Fledge South IEC 60870-5-104 Plugin
- This plugin provides IEC 60870-5-104 protocol support for Fledge.
- It allows Fledge to collect data from IEC 104 devices and systems.
-Homepage: https://github.com/felectra/fledge-south-iec104
-EOF
+        VERSION="1.0.0-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+        
+        # Write control file directly
+        echo "Package: fledge-south-iec104" > deb-package/DEBIAN/control
+        echo "Version: ${VERSION}" >> deb-package/DEBIAN/control
+        echo "Section: base" >> deb-package/DEBIAN/control
+        echo "Priority: optional" >> deb-package/DEBIAN/control
+        echo "Architecture: amd64" >> deb-package/DEBIAN/control
+        echo "Depends: libssl3, libc6" >> deb-package/DEBIAN/control
+        echo "Maintainer: FledgePower Team <noreply@fledgepower.com>" >> deb-package/DEBIAN/control
+        echo "Description: Fledge South IEC 60870-5-104 Plugin" >> deb-package/DEBIAN/control
+        echo " This plugin provides IEC 60870-5-104 protocol support for Fledge." >> deb-package/DEBIAN/control
+        echo " It allows Fledge to collect data from IEC 104 devices and systems." >> deb-package/DEBIAN/control
         
         # Build the .deb package
         cd deb-package
-        dpkg-deb --build . ../fledge-south-iec104_1.0.0_amd64.deb
+        dpkg-deb --build . ../fledge-south-iec104_${VERSION}_amd64.deb
         cd ..
         
         echo "✅ Manual .deb package created successfully!"
