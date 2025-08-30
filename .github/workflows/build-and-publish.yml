@@ -5,12 +5,10 @@ on:
   push:
     branches:
       # Для тестування використовуйте свою гілку, напр. 'feature/setup-ci-cd'
-      # Для робочого процесу тут має бути 'main'
       - feature/setup-ci-cd
 
 jobs:
   build:
-    # 1. Використовуємо Ubuntu 24.04, як зазначено в PRD
     runs-on: ubuntu-24.04
 
     permissions:
@@ -27,13 +25,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ca-certificates curl gnupg
 
-        # Крок 2.2: Завантажуємо та встановлюємо офіційний GPG ключ Fledge
-        curl -sL https://archives.fledge-iot.org/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/fledge-archive-keyring.gpg
+        # Крок 2.2: Завантажуємо та встановлюємо GPG ключ з основного репозиторію Dianomic
+        curl -sL http://packages.dianomic.com/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/dianomic-archive-keyring.gpg
 
-        # Крок 2.3: Додаємо СТАБІЛЬНИЙ репозиторій Fledge v3.1.0 для Ubuntu 24.04
-        echo "deb [signed-by=/usr/share/keyrings/fledge-archive-keyring.gpg] http://archives.fledge-iot.org/3.1.0/ubuntu2404/ main" | sudo tee /etc/apt/sources.list.d/fledge.list > /dev/null
+        # Крок 2.3: Додаємо основний СТАБІЛЬНИЙ репозиторій Fledge
+        echo "deb [signed-by=/usr/share/keyrings/dianomic-archive-keyring.gpg] http://packages.dianomic.com/ubuntu2404/fledge/ stable main" | sudo tee /etc/apt/sources.list.d/dianomic.list > /dev/null
 
-        # Крок 2.4: Оновлюємо список пакетів та встановлюємо Fledge SDK та інші залежності
+        # Крок 2.4: Оновлюємо список пакетів та встановлюємо Fledge SDK
         sudo apt-get update
         sudo apt-get install -y fledge-dev build-essential cmake libssl-dev
 
@@ -52,7 +50,7 @@ jobs:
     - name: Publish to GitHub Packages
       run: |
         DEB_FILE=$(find . -name "*.deb" | head -n 1)
-        if [ -z "$DEB_FILE" ]; then
+        if [ -z "$DE," ]; then
           echo "::error::.deb file not found!"
           exit 1
         fi
