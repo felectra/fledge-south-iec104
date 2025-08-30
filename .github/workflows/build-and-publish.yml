@@ -23,35 +23,26 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        # Встановлюємо базові утиліти для компіляції
         sudo apt-get update
-        # === НОВЕ ВИПРАВЛЕННЯ: Додаємо бібліотеку для cURL (HTTPS-запити) ===
         sudo apt-get install -y git build-essential cmake libssl-dev libboost-all-dev python3-dev python3-pip uuid-dev libcurl4-openssl-dev
-        # Встановлюємо NumPy
         sudo pip3 install numpy
 
     - name: Clone and Build Fledge from source
       run: |
-        # Клонуємо основний репозиторій Fledge
         git clone https://github.com/fledge-iot/fledge.git
         cd fledge
-        # Створюємо директорію для збірки
-        mkdir build
-        cd build
-        # Конфігуруємо та збираємо Fledge. Це створить необхідні бібліотеки.
+        # === ФІНАЛЬНЕ ВИПРАВЛЕННЯ: Використовуємо назву 'cmake_build' ===
+        mkdir cmake_build
+        cd cmake_build
         cmake ..
         make
-        # Встановлюємо Fledge в систему, щоб наш плагін міг його знайти
         sudo make install
 
     - name: Build the plugin
       run: |
-        # Переходимо в директорію нашого плагіна
         cd fledge-south-iec104
         mkdir build
         cd build
-        # Вказуємо CMake, де шукати встановлений Fledge
-        # та збираємо плагін
         cmake -DCMAKE_BUILD_TYPE=Release ..
         make
 
@@ -62,13 +53,10 @@ jobs:
 
     - name: Publish to GitHub Packages
       run: |
-        # Знаходимо .deb файл у директорії плагіна
         DEB_FILE=$(find ./fledge-south-iec104/build -name "*.deb" | head -n 1)
         if [ -z "$DEB_FILE" ]; then
           echo "::error::.deb file not found!"
           exit 1
         fi
         echo "Publishing $DEB_FILE..."
-        # Примітка: Логіка публікації може потребувати коригування для GitHub Packages APT registry.
-        # Поки що ми просто перевіряємо, що пакет створюється.
         echo "Package created successfully at $DEB_FILE"
